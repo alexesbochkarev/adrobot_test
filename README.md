@@ -2,6 +2,45 @@
 
 Обёртка над Keitaro на FastAPI + SQLAlchemy. Разрабатывается поэтапно.
 
+## Запуск всего проекта в Docker
+
+Нужны Docker и Docker Compose 2.24+; Python и Node.js на компьютере не нужны.
+Из корня репозитория:
+
+```sh
+docker compose up --build -d --wait
+```
+
+Интерфейс: <http://localhost:8080>, Swagger: <http://localhost:8080/docs>.
+Compose собирает React, запускает FastAPI, применяет миграции и проверяет готовность БД.
+Nginx раздаёт интерфейс и проксирует API; backend отдельно на хост не публикуется.
+
+Для работы с Keitaro перед первым запуском скопируйте `.env.example` в `.env`
+и заполните `KEITARO_BASE_URL`, `KEITARO_API_KEY` и при необходимости ID справочников.
+Существующий `.env` можно использовать без изменений. Без него приложение тоже стартует,
+но операции с Keitaro возвращают 503. Ключ передаётся только backend при запуске;
+файлы `.env` и локальная БД не попадают в образы.
+
+SQLite хранится в Docker volume `adrobot-data`, отдельно от локального `adrobot.db`.
+Compose фиксирует `DATABASE_URL=sqlite:////data/adrobot.db`, переопределяя значение из `.env`.
+Данные сохраняются после пересоздания контейнеров и `docker compose down`.
+
+```sh
+docker compose logs -f        # логи приложения
+docker compose down           # остановить, сохранив данные
+docker compose up --build -d --wait  # запуск / обновление после git pull
+```
+
+Если порт занят: `APP_PORT=8081 docker compose up --build -d --wait`.
+Порт доступен только на локальном компьютере. Для публикации в интернете нужны
+отдельно настроенные авторизация и HTTPS. `docker compose down -v` удаляет БД вместе с volume.
+
+Если локальная установка Docker/Colima сообщает `docker-buildx: no such file or directory`,
+нужно установить/восстановить плагин Buildx. Для Docker с поддержкой старого сборщика
+временный вариант запуска: `DOCKER_BUILDKIT=0 docker compose up --build -d --wait`.
+
+## Разработка без Docker
+
 Frontend на React + TypeScript находится в `frontend/`.
 Запуск в отдельном терминале: `cd frontend && npm ci && npm run dev`.
 Backend должен быть запущен на порту 8000. Интерфейс доступен на <http://127.0.0.1:5173>.

@@ -1,0 +1,24 @@
+name: Docker Compose smoke
+on: [push, pull_request]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose up --build -d --wait --wait-timeout 120
+      - name: Check frontend, API and OpenAPI through nginx
+        run: |
+          curl --fail --silent http://localhost:8080/ | grep 'id="root"'
+          curl --fail --silent http://localhost:8080/api/v1/health/ready | grep '"ok"'
+          curl --fail --silent http://localhost:8080/openapi.json | python -c 'import json, sys; assert "/api/v1/campaigns" in json.load(sys.stdin)["paths"]'
+      - name: Check restart with an existing database
+        run: |
+          docker compose exec -T backend python -c "import sqlite3; db=sqlite3.connect('/data/adrobot.db'); db.execute('CREATE TABLE compose_smoke (value INTEGER)'); db.execute('INSERT INTO compose_smoke VALUES (42)'); db.commit()"
+          docker compose down
+          docker compose up -d --wait --wait-timeout 120
+          docker compose exec -T backend python -c "import sqlite3; db=sqlite3.connect('/data/adrobot.db'); assert db.execute('SELECT value FROM compose_smoke').fetchone() == (42,); db.execute('DROP TABLE compose_smoke'); db.commit()"
+          curl --fail --silent http://localhost:8080/api/v1/health/ready | grep '"ok"'
+      - if: failure()
+        run: docker compose logs
+      - if: always()
+        run: docker compose down -v
