@@ -79,6 +79,7 @@ def campaign_view(session: Session, campaign: Campaign) -> CampaignStreamsView:
         keitaro_id=campaign.keitaro_id,
         editor_revision=campaign.editor_revision,
         sync_locked=campaign.sync_token is not None,
+        publication_id=campaign.sync_token,
         streams=[stream_view(stream) for stream in campaign_streams(session, campaign)],
     )
 

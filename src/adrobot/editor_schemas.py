@@ -44,6 +44,7 @@ class CampaignStreamsView(BaseModel):
     keitaro_id: int
     editor_revision: int
     sync_locked: bool
+    publication_id: str | None = None
     streams: list[StreamView]
 
 

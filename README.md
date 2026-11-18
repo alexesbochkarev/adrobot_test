@@ -1,6 +1,11 @@
-# Adrobot backend
+# Adrobot
 
 Обёртка над Keitaro на FastAPI + SQLAlchemy. Разрабатывается поэтапно.
+
+Frontend на React + TypeScript находится в `frontend/`.
+Запуск в отдельном терминале: `cd frontend && npm ci && npm run dev`.
+Backend должен быть запущен на порту 8000. Интерфейс доступен на <http://127.0.0.1:5173>.
+Полная инструкция и браузерные тесты: [frontend/README.md](frontend/README.md).
 
 ## Текущий этап
 
@@ -142,4 +147,5 @@ src/adrobot/       приложение, модели, API кампаний, к�
 migrations/       миграции Alembic
 tests/            тесты на изолированных SQLite-базах
 docs/             требования и план реализации
+frontend/         React-интерфейс, Vite, браузерные тесты Playwright
 ```

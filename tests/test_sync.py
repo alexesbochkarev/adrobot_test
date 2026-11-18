@@ -275,6 +275,7 @@ def test_timeout_after_write_locks_edits_and_reconciles_without_second_put(api):
     assert response.status_code == 502, response.text
     assert response.json()["detail"]["publication_status"] == "unknown"
     assert cached(client)["sync_locked"]
+    assert cached(client)["publication_id"] == key
     assert client.post("/api/v1/campaigns/100/fetch").status_code == 409
     assert edit(client, "unpin", 2).status_code == 409
     assert (
