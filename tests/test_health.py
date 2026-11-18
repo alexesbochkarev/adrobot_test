@@ -1,3 +1,5 @@
+from alembic import command
+from alembic.config import Config
 from fastapi.testclient import TestClient
 
 from adrobot.config import Settings
@@ -19,3 +21,12 @@ def test_readiness_after_migration(migrated_database: str) -> None:
         response = client.get("/api/v1/health/ready")
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
+
+
+def test_readiness_requires_editor_migration(database_url: str) -> None:
+    command.upgrade(Config("alembic.ini"), "0002")
+    app = create_app(Settings(_env_file=None, database_url=database_url))
+    with TestClient(app) as client:
+        assert client.get("/api/v1/health/ready").status_code == 503
+        command.upgrade(Config("alembic.ini"), "head")
+        assert client.get("/api/v1/health/ready").status_code == 200
