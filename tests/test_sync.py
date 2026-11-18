@@ -15,7 +15,17 @@ from adrobot.db import create_db_engine
 from adrobot.keitaro import KeitaroClient
 from adrobot.main import create_app
 from adrobot.models import Campaign, Publication, Stream
-from adrobot.sync import SyncError, guard_campaign
+from adrobot.sync import SyncError, guard_campaign, snapshot
+
+
+def test_empty_comments_are_equivalent_but_real_comments_are_not():
+    data = Tracker().streams[200]
+    data["comments"] = None
+    before = snapshot(data, 100)
+    data["comments"] = ""
+    assert snapshot(data, 100) == before
+    data["comments"] = "Changed by user"
+    assert snapshot(data, 100) != before
 
 
 class Tracker:

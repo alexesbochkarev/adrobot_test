@@ -79,3 +79,15 @@ def test_api_key_sent_only_in_header():
         transport=httpx.MockTransport(handler),
     ) as http:
         assert KeitaroClient(http).list_items("groups", type="campaigns") == []
+
+
+@pytest.mark.parametrize("as_list", [False, True])
+def test_enable_accepts_object_or_array(as_list):
+    data = {"id": 123, "state": "active"}
+    with httpx.Client(
+        base_url="https://example.test/",
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(200, json=[data] if as_list else data)
+        ),
+    ) as http:
+        KeitaroClient(http).enable_campaign(123)

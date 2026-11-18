@@ -54,7 +54,8 @@ uv run --locked uvicorn adrobot.main:create_app --factory --reload --host 127.0.
 
 Контракт основан на [официальной документации](https://admin-api.docs.keitaro.io/)
 и проверке ответов тестового экземпляра через GET-запросы.
-Реальное создание кампании пока не проверено: автоматические тесты используют HTTPX MockTransport.
+Создание и Push проверены на отдельной реальной кампании с одним оффером.
+Автоматические тесты используют HTTPX MockTransport. Отчёт: [docs/live-verification.md](docs/live-verification.md).
 
 | Метод и путь (после `/api/v1`) | Назначение |
 | --- | --- |

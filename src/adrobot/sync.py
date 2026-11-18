@@ -20,6 +20,12 @@ class SyncError(Exception):
         super().__init__(code)
 
 
+def normalize_saved_snapshot(value: dict) -> dict:
+    result = deepcopy(value)
+    result["protected"]["comments"] = result["protected"].get("comments") or ""
+    return result
+
+
 def stream_view(stream: Stream) -> StreamView:
     return StreamView(
         id=stream.id,
@@ -153,8 +159,11 @@ def snapshot(data: dict, campaign_id: int) -> dict:
         except EditorError as error:
             raise SyncError("invalid_remote_allocation", 422, reason=error.code) from None
         offers.sort(key=lambda x: x["offer_id"])
+    protected = _without_timestamps({k: v for k, v in data.items() if k != "offers"})
+    # Keitaro normalizes an unset comment from null to an empty string on offer-only PUT.
+    protected["comments"] = protected.get("comments") or ""
     return {
-        "protected": _without_timestamps({k: v for k, v in data.items() if k != "offers"}),
+        "protected": protected,
         "offers": offers,
     }
 
@@ -280,7 +289,7 @@ def push_stream(
         id=operation_id,
         stream_id=stream.id,
         expected_revision=revision,
-        before_snapshot=deepcopy(stream.remote_snapshot),
+        before_snapshot=normalize_saved_snapshot(stream.remote_snapshot),
         desired_offers=desired,
     )
     session.add(operation)
@@ -340,7 +349,10 @@ def reconcile_publication(
     if stream.campaign.sync_token != operation.id:
         raise SyncError("publication_lock_lost")
     confirmed = snapshot(client.get_stream(stream.keitaro_id), stream.campaign.keitaro_id)
-    if confirmed != {**operation.before_snapshot, "offers": operation.desired_offers}:
+    if confirmed != {
+        **normalize_saved_snapshot(operation.before_snapshot),
+        "offers": operation.desired_offers,
+    }:
         raise SyncError("publication_not_confirmed", operation_id=operation.id)
     _complete(session, stream, operation, confirmed)
     return operation

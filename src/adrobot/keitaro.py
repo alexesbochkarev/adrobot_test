@@ -89,6 +89,11 @@ class KeitaroClient:
 
     def enable_campaign(self, campaign_id: int) -> None:
         data = self.request("POST", f"campaigns/{campaign_id}/enable")
+        if isinstance(data, list):
+            matches = [
+                item for item in data if isinstance(item, dict) and item.get("id") == campaign_id
+            ]
+            data = matches[0] if len(matches) == 1 else None
         if (
             not isinstance(data, dict)
             or data.get("id") != campaign_id
