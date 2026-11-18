@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from adrobot.db import get_session
-from adrobot.models import Campaign
+from adrobot.models import Campaign, CampaignCreation
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -30,6 +30,7 @@ def ready(session: Annotated[Session, Depends(get_session)]) -> HealthResponse:
     try:
         # An empty database accepting SELECT 1 is not ready to serve application requests.
         session.execute(select(Campaign.id).limit(1))
+        session.execute(select(CampaignCreation.id).limit(1))
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
