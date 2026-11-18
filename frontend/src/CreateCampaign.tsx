@@ -13,7 +13,7 @@ export default function CreateCampaign({
   const [intent, setIntent] = useState<Intent | null>(() =>
     readSaved(storageKey),
   );
-  const [name, setName] = useState("test_bochkarev_campaign1");
+  const [name, setName] = useState("");
   const [country, setCountry] = useState("AU");
   const [offer, setOffer] = useState<Item | null>(null);
   const [refs, setRefs] = useState<Item[][]>([[], [], []]);
@@ -165,8 +165,7 @@ export default function CreateCampaign({
                   maxLength={255}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  pattern="test_bochkarev_.+"
-                  title="Название должно начинаться с test_bochkarev_"
+                  placeholder="Название кампании"
                 />
               </label>
               <label>

@@ -67,7 +67,7 @@ async function mockApi(page: Page, failPush = false) {
         body: JSON.stringify(data),
       });
     if (path === "/campaigns" && request.method() === "GET")
-      return respond([{ id: 100, name: "test_bochkarev_campaign1" }]);
+      return respond([{ id: 100, name: "Summer campaign" }]);
     if (path.startsWith("/reference/"))
       return respond([{ id: 1, name: "FORTESTS" }]);
     if (path === "/offers") return respond([{ id: 30, name: "Новый оффер" }]);
@@ -176,7 +176,7 @@ async function mockApi(page: Page, failPush = false) {
 }
 async function openEditor(page: Page) {
   await page.goto("/");
-  await page.getByRole("button", { name: /test_bochkarev_campaign1/ }).click();
+  await page.getByRole("button", { name: /Summer campaign/ }).click();
   await page.getByRole("button", { name: "↻ Fetch из Keitaro" }).click();
   await expect(
     page.getByRole("heading", { name: "Основной поток" }),
@@ -244,7 +244,7 @@ test("Unknown push survives reload and is reconciled without second push", async
     page.getByText("Публикация требует проверки", { exact: true }),
   ).toBeVisible();
   await page.reload();
-  await page.getByRole("button", { name: /test_bochkarev_campaign1/ }).click();
+  await page.getByRole("button", { name: /Summer campaign/ }).click();
   await expect(
     page.getByRole("button", { name: "Опубликовать ↑" }),
   ).toBeDisabled();
@@ -254,15 +254,14 @@ test("Unknown push survives reload and is reconciled without second push", async
   );
   expect(calls.filter((x) => x.path.endsWith("/push"))).toHaveLength(1);
 });
-test("Create campaign with required prefix and stable recoverable intent", async ({
+test("Create campaign with arbitrary name and stable recoverable intent", async ({
   page,
 }) => {
   const calls = await mockApi(page);
   await page.goto("/");
   await page.getByRole("button", { name: "＋ Новая кампания" }).click();
-  await expect(page.getByLabel("Название кампании")).toHaveValue(
-    "test_bochkarev_campaign1",
-  );
+  await expect(page.getByLabel("Название кампании")).toHaveValue("");
+  await page.getByLabel("Название кампании").fill("Summer campaign");
   await page.getByLabel("Оффер", { exact: true }).selectOption("30");
   await page
     .getByRole("button", { name: "Создать кампанию", exact: true })
@@ -273,7 +272,7 @@ test("Create campaign with required prefix and stable recoverable intent", async
   const created = calls.find(
     (x) => x.path === "/campaigns" && x.method === "POST",
   )!;
-  expect(created.body.name).toMatch(/^test_bochkarev_/);
+  expect(created.body.name).toBe("Summer campaign");
   expect(created.body.offer_id).toBe(30);
   await page.reload();
   await page.getByRole("button", { name: "＋ Новая кампания" }).click();

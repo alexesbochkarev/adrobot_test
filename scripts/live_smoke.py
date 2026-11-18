@@ -15,7 +15,7 @@ def main() -> None:
     if not args.run_live:
         return
     operation_id = str(uuid4())
-    name = f"test_bochkarev_smoke_{operation_id[:8]}"
+    name = f"test_adrobot_smoke_{operation_id[:8]}"
     alias = "adrobot-" + operation_id.replace("-", "")
     app = create_app()
     with TestClient(app) as client:

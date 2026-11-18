@@ -8,7 +8,7 @@ type PushIntent = { id: string; stream: number; revision: number };
 export default function App() {
   const [page, setPage] = useState<"editor" | "create">("editor");
   const [items, setItems] = useState<Item[]>([]);
-  const [search, setSearch] = useState("test_bochkarev_");
+  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Item | null>(null);
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(false);
