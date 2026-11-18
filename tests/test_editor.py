@@ -1,7 +1,7 @@
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import delete, func, insert, select
+from sqlalchemy import delete, func, insert, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.orm.exc import StaleDataError
@@ -359,7 +359,9 @@ def test_editor_migration_preserves_existing_campaigns(database_url):
     engine = create_db_engine(database_url)
     try:
         with Session(engine) as session:
-            session.add(Campaign(keitaro_id=100, name="Existing"))
+            session.execute(
+                text("INSERT INTO campaigns (keitaro_id, name) VALUES (100, 'Existing')")
+            )
             session.commit()
         command.upgrade(config, "head")
         command.check(config)

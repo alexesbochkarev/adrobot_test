@@ -57,6 +57,30 @@ class KeitaroClient:
             raise KeitaroError("keitaro_invalid_response")
         return data
 
+    def get_campaign(self, campaign_id: int) -> dict[str, Any]:
+        data = self.request("GET", f"campaigns/{campaign_id}")
+        if (
+            not isinstance(data, dict)
+            or data.get("id") != campaign_id
+            or not isinstance(data.get("name"), str)
+        ):
+            raise KeitaroError("keitaro_invalid_response")
+        return data
+
+    def get_streams(self, campaign_id: int) -> list[dict[str, Any]]:
+        return self.list_items(f"campaigns/{campaign_id}/streams")
+
+    def get_stream(self, stream_id: int) -> dict[str, Any]:
+        data = self.request("GET", f"streams/{stream_id}")
+        if not isinstance(data, dict) or data.get("id") != stream_id:
+            raise KeitaroError("keitaro_invalid_response")
+        return data
+
+    def update_stream_offers(self, stream_id: int, offers: list[dict]) -> None:
+        data = self.request("PUT", f"streams/{stream_id}", json={"offers": offers})
+        if not isinstance(data, dict) or data.get("id") != stream_id:
+            raise KeitaroError("keitaro_invalid_response", uncertain=True)
+
     def create_campaign(self, payload: dict[str, Any]) -> int:
         return self._created_id(self.request("POST", "campaigns", json=payload))
 

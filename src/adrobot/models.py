@@ -1,6 +1,16 @@
 from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    func,
+    true,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from adrobot.db import Base
@@ -16,6 +26,8 @@ class Campaign(Base):
     keitaro_id: Mapped[int] = mapped_column(Integer, unique=True)
     name: Mapped[str] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    editor_revision: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    sync_token: Mapped[str | None] = mapped_column(String(36))
 
 
 class CampaignCreation(Base):
@@ -65,6 +77,8 @@ class Stream(Base):
     position: Mapped[int] = mapped_column(Integer)
     schema_kind: Mapped[str] = mapped_column(String(16))
     revision: Mapped[int] = mapped_column(Integer, default=1)
+    remote_present: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
+    remote_snapshot: Mapped[dict | None] = mapped_column(JSON)
     campaign: Mapped[Campaign] = relationship()
     offers: Mapped[list["StreamOffer"]] = relationship(
         back_populates="stream", cascade="all, delete-orphan", order_by="StreamOffer.offer_id"
@@ -117,3 +131,24 @@ class StreamOffer(Base):
     published_removed: Mapped[bool] = mapped_column(Boolean, default=False)
     stream: Mapped[Stream] = relationship(back_populates="offers")
     offer: Mapped[Offer] = relationship()
+
+
+class Publication(Base):
+    __tablename__ = "publications"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'succeeded', 'failed', 'conflict', 'unknown')",
+            name="valid_status",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    stream_id: Mapped[int] = mapped_column(ForeignKey("streams.id"), index=True)
+    expected_revision: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(16), default="pending")
+    phase: Mapped[str] = mapped_column(String(32), default="checking")
+    before_snapshot: Mapped[dict] = mapped_column(JSON)
+    desired_offers: Mapped[list] = mapped_column(JSON)
+    error_code: Mapped[str | None] = mapped_column(String(80))
+    result: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
